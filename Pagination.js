@@ -1,4 +1,5 @@
-import React, { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 function Pagination() {
   const [apidata, setApiData] = useState([]);
@@ -52,14 +53,16 @@ function Pagination() {
   useEffect(() => {
     fetchdata();
   }, [searchD, currentpage]);
+
   if (load) {
     return <div>Loading</div>;
   }
+  console.log(window.location.href);
 
   const pageNumbers = [];
   const totalPages = Math.ceil(apidata.total / 10);
   const startPage = Math.max(1, currentpage - Math.floor(2));
-  const endPage = Math.min(totalPages, startPage + 3);
+  const endPage = Math.min(totalPages, startPage + 2);
 
   const handlepage = (page) => {
     if (page > 0 && page <= totalPages) {
@@ -184,7 +187,7 @@ function Pagination() {
               <td>{item.price}</td>
               <td>
                 <button type="delete" onClick={() => handleDelet(item.id)}>
-                  delete
+                  Delete
                 </button>
               </td>
               <td>
