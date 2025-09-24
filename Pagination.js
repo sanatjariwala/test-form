@@ -9,18 +9,24 @@ function Pagination() {
   const [column, setColumn] = useState(null);
   const [load, setLoad] = useState(true);
   const [inputValue, setInputValue] = useState("");
-  // const [edit, setEdit] = useState(false);
+  const [number, setNumber] = useState("");
 
   const fetchdata = () => {
-    if (searchD) {
+    if (number) {
+      const url = `https://dummyjson.com/products/search?q=${number}`;
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          setLoad(false);
+          setApiData(data);
+        })
+        .catch(() => {
+          setApiData(null);
+        });
+    } else if (searchD) {
       const url = `https://dummyjson.com/products/search?q=${searchD}`;
       fetch(url)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Data not found");
-          }
-          return response.json();
-        })
+        .then((response) => response.json())
         .then((data) => {
           setLoad(false);
           setApiData(data);
@@ -31,12 +37,7 @@ function Pagination() {
     } else {
       const url = `https://dummyjson.com/products?limit=10&skip=${skipval}&select=title,price&q=${searchD}`;
       fetch(url)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Data not found");
-          }
-          return response.json();
-        })
+        .then((response) => response.json())
         .then((data) => {
           setLoad(false);
           setApiData(data);
@@ -46,19 +47,19 @@ function Pagination() {
         });
     }
   };
+  console.log(number);
 
   useEffect(() => {
     fetchdata();
   }, [searchD, currentpage]);
-
   if (load) {
     return <div>Loading</div>;
   }
 
   const pageNumbers = [];
   const totalPages = Math.ceil(apidata.total / 10);
-  const startPage = Math.max(1, currentpage - Math.floor(1));
-  const endPage = Math.min(totalPages, startPage + 2);
+  const startPage = Math.max(1, currentpage - Math.floor(2));
+  const endPage = Math.min(totalPages, startPage + 3);
 
   const handlepage = (page) => {
     if (page > 0 && page <= totalPages) {
@@ -104,30 +105,36 @@ function Pagination() {
     //   },
     // });
   };
-
-  // const getDtata = apidata.products.find((item) => item === inputValue);
   const handleEdit = (e) => {
     setInputValue(e);
+    setNumber(e.id);
   };
 
   const handleform = (e) => {
     setInputValue({ ...inputValue, [e.target.name]: e.target.value });
-    console.log(inputValue, "12312312");
   };
-
-  console.log(inputValue);
 
   const handleUpdate = (e) => {
     e.preventDefault();
     const updateitem = apidata.products.map((item) =>
       item.id === inputValue.id ? inputValue : item
     );
+
     setApiData({ ...apidata, products: updateitem });
     setInputValue("");
+    setNumber("");
   };
 
   const handleSearch = (event) => {
     setSearchD(event.target.value);
+  };
+
+  const numberSearch = (event) => {
+    const id = event.target.value;
+    setNumber(id);
+
+    const foundItem = apidata.products.find((item) => item.id === +id);
+    foundItem ? setInputValue(foundItem) : setInputValue("");
   };
 
   const sorting = (Cname) => {
@@ -152,12 +159,15 @@ function Pagination() {
     setApiData({ products: sortedata });
   };
 
-  // console.log(pageNumbers, currentpage);
-
-  // console.log("apidata .......", apidata);
   return (
     <div>
-      <input type="text" value={searchD} onChange={handleSearch}></input>
+      <input
+        type="text"
+        name="search-title-input"
+        value={searchD}
+        onChange={handleSearch}
+        placeholder="Search by Title"
+      ></input>
       <table>
         <thead>
           <tr>
@@ -219,31 +229,37 @@ function Pagination() {
         </ul>
       </nav>
 
-      {inputValue && (
-        <form onSubmit={handleUpdate}>
-          <div>
-            Id : <input type="text" value={inputValue.id} readOnly></input>
-            <br />
-            Title :{" "}
-            <input
-              type="text"
-              value={inputValue.title}
-              onChange={handleform}
-              name="title"
-            ></input>
-            <br />
-            Price :{" "}
-            <input
-              type="number"
-              value={inputValue.price}
-              onChange={handleform}
-              name="price"
-            ></input>
-            <br />
-            <button type="submit">Update</button>
-          </div>
-        </form>
-      )}
+      {/* {inputValue && ( */}
+      <form onSubmit={handleUpdate}>
+        <div>
+          Id :{" "}
+          <input
+            name="search-number-input"
+            type="text"
+            value={number || inputValue.id}
+            onChange={numberSearch}
+          ></input>
+          <br />
+          Title :{" "}
+          <input
+            type="text"
+            value={inputValue.title}
+            onChange={handleform}
+            name="title"
+          ></input>
+          <br />
+          Price :{" "}
+          <input
+            type="number"
+            value={inputValue.price}
+            onChange={handleform}
+            name="price"
+          ></input>
+          <br />
+          <button type="submit">Update</button>
+        </div>
+      </form>
+      {/* )} */}
     </div>
   );
 }
